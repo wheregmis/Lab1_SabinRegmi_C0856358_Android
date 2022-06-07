@@ -8,6 +8,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -23,6 +26,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.lab1_sabinregmi_c0856358_android.databinding.ActivityMapsBinding;
 import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
@@ -35,6 +39,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static final int REQUEST_CODE = 1;
     private Marker homeMarker;
+    
+    List<Marker> markers = new ArrayList();
 
     // location with location manager and listener
     LocationManager locationManager;
@@ -93,7 +99,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             requestLocationPermission();
         else
             startUpdateLocation();
+
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener(){
+            @Override
+            public void onMapClick(@NonNull LatLng latLng) {
+                setMarker(latLng);
+            }
+            private void setMarker(LatLng latLng) {
+                MarkerOptions options = new MarkerOptions().position(latLng)
+                        .title("Your destination");
+
+                markers.add(mMap.addMarker(options));
+            }
+        });
+
     }
+
 
     @SuppressLint("MissingPermission")
     @Override
