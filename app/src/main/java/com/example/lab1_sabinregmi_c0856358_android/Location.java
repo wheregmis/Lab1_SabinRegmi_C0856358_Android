@@ -7,13 +7,14 @@ import java.io.Serializable;
 
 public class Location implements Serializable {
 
-    private LatLng latLng;
+    private double latitude;
+    private double longitude;
 
     public Location(LatLng latLng) {
-        this.latLng = latLng;
-
+        this.latitude = latLng.latitude;
+        this.longitude = latLng.longitude;
     }
     public LatLng getLatLng() {
-        return latLng;
+         return new LatLng(latitude, longitude);
     }
 }

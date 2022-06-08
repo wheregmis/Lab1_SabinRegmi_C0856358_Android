@@ -66,8 +66,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int REQUEST_CODE = 1;
     private Marker homeMarker;
 
-    List<Marker> markers = new ArrayList();
-    List<com.example.lab1_sabinregmi_c0856358_android.Location> latLngList = new ArrayList();
+    List<Marker> markers;
+    private ArrayList<com.example.lab1_sabinregmi_c0856358_android.Location> latLngList = new ArrayList();
 
     // for drawing polygon
     Polygon shape;
@@ -96,8 +96,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // instantiate shared preferences
         sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
 
-        // todo: uncomment below line to get from shared preferences
-        //getLocationsFromSharedPreferences();
+        latLngList = new ArrayList();
+        markers = new ArrayList();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -179,6 +179,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             requestLocationPermission();
         else
             startUpdateLocation();
+        // todo: uncomment below line to get from shared preferences
+        getLocationsFromSharedPreferences();
 
         mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
 
@@ -207,6 +209,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
                 if (markers.contains(marker)){
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+                    builder.setTitle("Click to change the text of marker");
+
+                    // Set up the input
+                    final EditText input = new EditText(MapsActivity.this);
+                    // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                    input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    builder.setView(input);
+
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            marker.setIcon(createPureTextIcon(input.getText().toString()));
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+
+                    builder.show();
                     return false;
                 }else{
                     marker.remove();
@@ -283,6 +310,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapLongClick(@NonNull LatLng latLng) {
                 markers.removeAll(markers);
+                latLngList.removeAll(latLngList);
+                addLocationToSharedPreferences();
                 shape = null;
                 mMap.clear();
                 fab.hide();
@@ -292,10 +321,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener(){
             @Override
             public void onMapClick(@NonNull LatLng latLng) {
+
                 setMarker(latLng);
 
                 // todo: Uncomment below line to add location to shared preferences
-                //addLocationToSharedPreferences();
+                addLocationToSharedPreferences();
+
             }
         });
 
@@ -411,18 +442,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Set a background in order to see the
         // full size and positioning of the bitmap.
         // Remove that for a fully transparent icon.
-        //canvas.drawColor(Color.LTGRAY);
+        canvas.drawColor(Color.LTGRAY);
 
         canvas.drawText(text, 0, 0, textPaint);
         BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(image);
         return icon;
     }
     public void setMarker(LatLng latLng) {
-
+        //Log.d("MapsActivity", "setMarker: "+latLng);
         if (markers.size() == 0){
             MarkerOptions options = new MarkerOptions().position(latLng)
                     .title("A")
-                    //.icon(createPureTextIcon("A"))
+                    .icon(createPureTextIcon("A"))
                     ;
             options.draggable(true);
 
@@ -431,7 +462,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
         }else if (markers.size() == 1){
             MarkerOptions options = new MarkerOptions().position(latLng)
-                    .title("B");
+                    .title("B")
+                    .icon(createPureTextIcon("B"));
             options.draggable(true);
 
             // check if there are already the same number of markers, we clear the map.
@@ -439,7 +471,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
         }else if (markers.size() == 2){
             MarkerOptions options = new MarkerOptions().position(latLng)
-                    .title("C");
+                    .title("C")
+                    .icon(createPureTextIcon("C"));
             options.draggable(true);
 
             // check if there are already the same number of markers, we clear the map.
@@ -447,7 +480,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
         }else if (markers.size() == 3){
             MarkerOptions options = new MarkerOptions().position(latLng)
-                    .title("D");
+                    .title("D")
+                    .icon(createPureTextIcon("D"));
             options.draggable(true);
             // check if there are already the same number of markers, we clear the map.
             markers.add(mMap.addMarker(options));
@@ -474,6 +508,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void setMarkerInCoordinate(LatLng latLng, Float distance){
+        Log.i("MapsActivity", "setMarkerInCoordinate: "+latLng);
         DecimalFormat df = new DecimalFormat("#.##");
         MarkerOptions options = new MarkerOptions().position(latLng)
                 .title("")
@@ -493,6 +528,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void addLocationToSharedPreferences(){
         try {
+            //Log.i("MapsActivity", "addLocationToSharedPreferences: "+latLngList.get(0).getLatLng().latitude);
             sharedPreferences.edit().putString("location_serialized", ObjectSerializer.serialize((Serializable) latLngList)).apply();
         } catch (IOException e) {
             e.printStackTrace();
@@ -506,7 +542,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             testLatLang = (ArrayList<com.example.lab1_sabinregmi_c0856358_android.Location>) ObjectSerializer.deserialize(receivedSerializedString);
             if (testLatLang != null){
                 for (com.example.lab1_sabinregmi_c0856358_android.Location location: testLatLang){
-                    setMarker(location.getLatLng());
+                    Log.i("MapsActivity", "Getting value from Shared: "+location.getLatLng());
+                    if (location.getLatLng() != null){
+                        setMarker(location.getLatLng());
+                    }
+
                 }
             }
 
