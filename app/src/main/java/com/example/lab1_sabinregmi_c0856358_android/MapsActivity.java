@@ -9,6 +9,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -45,6 +46,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -58,6 +60,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Marker homeMarker;
 
     List<Marker> markers = new ArrayList();
+    List<com.example.lab1_sabinregmi_c0856358_android.Location> latLngList = new ArrayList();
 
     // for drawing polygon
     Polyline line;
@@ -70,12 +73,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private String m_Text = "";
 
+    // instance of shared preferences
+    SharedPreferences sharedPreferences;
+
+    public static final String SHARED_PREFERENCES_NAME = "LabActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         binding = ActivityMapsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        // instantiate shared preferences
+        sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
+
+        // todo: uncomment below line to get from shared preferences
+        //getLocationsFromSharedPreferences();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -89,16 +103,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
                 builder.setTitle("Color");
 
-// Set up the input
+                // Set up the input
                 final EditText input = new EditText(MapsActivity.this);
-// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
                 input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 final EditText input2 = new EditText(MapsActivity.this);
                 input2.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
                 builder.setView(input);
                 builder.setView(input2);
 
-// Set up the buttons
+                // Set up the buttons
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -237,62 +251,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(@NonNull LatLng latLng) {
                 setMarker(latLng);
+
+                // todo: Uncomment below line to add location to shared preferences
+                //addLocationToSharedPreferences();
             }
-            private void setMarker(LatLng latLng) {
 
-                if (markers.size() == 0){
-                    MarkerOptions options = new MarkerOptions().position(latLng)
-                            .title("A");
-                    options.draggable(true);
-
-                    // check if there are already the same number of markers, we clear the map.
-                    markers.add(mMap.addMarker(options));
-                }else if (markers.size() == 1){
-                    MarkerOptions options = new MarkerOptions().position(latLng)
-                            .title("B");
-                    options.draggable(true);
-
-                    // check if there are already the same number of markers, we clear the map.
-                    markers.add(mMap.addMarker(options));
-                }else if (markers.size() == 2){
-                    MarkerOptions options = new MarkerOptions().position(latLng)
-                            .title("C");
-                    options.draggable(true);
-
-                    // check if there are already the same number of markers, we clear the map.
-                    markers.add(mMap.addMarker(options));
-                }else if (markers.size() == 3){
-                    MarkerOptions options = new MarkerOptions().position(latLng)
-                            .title("D");
-                    options.draggable(true);
-
-                    // check if there are already the same number of markers, we clear the map.
-                    markers.add(mMap.addMarker(options));
-                }else{
-                    MarkerOptions options = new MarkerOptions().position(latLng)
-                            .title("P");
-                    options.draggable(true);
-//
-//                    // check if there are already the same number of markers, we clear the map.
-                    markers.add(mMap.addMarker(options));
-
-                }
-
-//                if (markers.size() == POLYGON_SIDES)
-//                {
-//                    drawShape();
-//                    drawLine();
-//                }
-                if (markers.size() > POLYGON_SIDES)
-                {
-                    //mMap.clear();
-//                    shape.remove();
-//                    shape = null;
-                    drawShape();
-                    //drawLine();
-                }
-
-            }
 
 
 
@@ -333,40 +296,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                line = mMap.addPolyline(options);
             }
 
-            private void drawShape() {
-                PolygonOptions options = new PolygonOptions()
-                        .fillColor(0x5900FF00)
-                        // 0xFF00FF00 is green and 59 instead of FF is 35% transparency
-                        .strokeColor(Color.RED)
-                        .strokeWidth(5);
-                options.clickable(true);
 
-                ArrayList<LatLng> sourcePoints = new ArrayList<>();
-
-                for (int i=0; i<POLYGON_SIDES; i++) {
-//                    options.add(markers.get(i).getPosition());
-                    sourcePoints.add(markers.get(i).getPosition());
-
-                }
-                Projection projection = mMap.getProjection();
-                ArrayList<Point> screenPoints = new ArrayList<>(sourcePoints.size());
-                for (LatLng location : sourcePoints) {
-                    Point p = projection.toScreenLocation(location);
-                    screenPoints.add(p);
-                }
-
-                ArrayList<Point> convexHullPoints = convexHull(screenPoints);
-                ArrayList<LatLng> convexHullLocationPoints = new ArrayList(convexHullPoints.size());
-                for (Point screenPoint : convexHullPoints) {
-                    LatLng location = projection.fromScreenLocation(screenPoint);
-                    convexHullLocationPoints.add(location);
-                }
-
-                for (LatLng latLng : convexHullLocationPoints) {
-                    options.add(latLng);
-                }
-                shape = mMap.addPolygon(options);
-            }
         });
 
     }
@@ -393,6 +323,102 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setHomeMarker(lastKnownLocation);
     }
 
+    private void drawShape() {
+        PolygonOptions options = new PolygonOptions()
+                .fillColor(0x5900FF00)
+                // 0xFF00FF00 is green and 59 instead of FF is 35% transparency
+                .strokeColor(Color.RED)
+                .strokeWidth(5);
+        options.clickable(true);
+
+        ArrayList<LatLng> sourcePoints = new ArrayList<>();
+
+        for (int i=0; i<POLYGON_SIDES; i++) {
+//                    options.add(markers.get(i).getPosition());
+            sourcePoints.add(markers.get(i).getPosition());
+
+        }
+        Projection projection = mMap.getProjection();
+        ArrayList<Point> screenPoints = new ArrayList<>(sourcePoints.size());
+        for (LatLng location : sourcePoints) {
+            Point p = projection.toScreenLocation(location);
+            screenPoints.add(p);
+        }
+
+        ArrayList<Point> convexHullPoints = convexHull(screenPoints);
+        ArrayList<LatLng> convexHullLocationPoints = new ArrayList(convexHullPoints.size());
+        for (Point screenPoint : convexHullPoints) {
+            LatLng location = projection.fromScreenLocation(screenPoint);
+            convexHullLocationPoints.add(location);
+        }
+
+        for (LatLng latLng : convexHullLocationPoints) {
+            options.add(latLng);
+        }
+        shape = mMap.addPolygon(options);
+    }
+
+    public void setMarker(LatLng latLng) {
+
+        if (markers.size() == 0){
+            MarkerOptions options = new MarkerOptions().position(latLng)
+                    .title("A");
+            options.draggable(true);
+
+            // check if there are already the same number of markers, we clear the map.
+            markers.add(mMap.addMarker(options));
+            latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
+        }else if (markers.size() == 1){
+            MarkerOptions options = new MarkerOptions().position(latLng)
+                    .title("B");
+            options.draggable(true);
+
+            // check if there are already the same number of markers, we clear the map.
+            markers.add(mMap.addMarker(options));
+            latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
+        }else if (markers.size() == 2){
+            MarkerOptions options = new MarkerOptions().position(latLng)
+                    .title("C");
+            options.draggable(true);
+
+            // check if there are already the same number of markers, we clear the map.
+            markers.add(mMap.addMarker(options));
+            latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
+        }else if (markers.size() == 3){
+            MarkerOptions options = new MarkerOptions().position(latLng)
+                    .title("D");
+            options.draggable(true);
+
+            // check if there are already the same number of markers, we clear the map.
+            markers.add(mMap.addMarker(options));
+            latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
+        }else{
+            MarkerOptions options = new MarkerOptions().position(latLng)
+                    .title("P");
+            options.draggable(true);
+//
+//                    // check if there are already the same number of markers, we clear the map.
+            markers.add(mMap.addMarker(options));
+            latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
+
+        }
+
+//                if (markers.size() == POLYGON_SIDES)
+//                {
+//                    drawShape();
+//                    drawLine();
+//                }
+        if (markers.size() == POLYGON_SIDES)
+        {
+            //mMap.clear();
+//                    shape.remove();
+//                    shape = null;
+            drawShape();
+            //drawLine();
+        }
+
+    }
+
     private void setHomeMarker(Location location) {
         LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions options = new MarkerOptions().position(userLocation)
@@ -403,6 +429,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
     }
 
+    public void addLocationToSharedPreferences(){
+        try {
+            sharedPreferences.edit().putString("location_serialized", ObjectSerializer.serialize((Serializable) latLngList)).apply();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void getLocationsFromSharedPreferences(){
+        String receivedSerializedString = sharedPreferences.getString("location_serialized", null);
+        try {
+            ArrayList<com.example.lab1_sabinregmi_c0856358_android.Location>testLatLang = new ArrayList();
+            testLatLang = (ArrayList<com.example.lab1_sabinregmi_c0856358_android.Location>) ObjectSerializer.deserialize(receivedSerializedString);
+            if (testLatLang != null){
+                for (com.example.lab1_sabinregmi_c0856358_android.Location location: testLatLang){
+                    setMarker(location.getLatLng());
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void requestLocationPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE);
