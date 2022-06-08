@@ -11,7 +11,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
@@ -21,6 +24,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -30,8 +34,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.lab1_sabinregmi_c0856358_android.databinding.ActivityMapsBinding;
@@ -47,6 +53,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -196,6 +203,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+                if (markers.contains(marker)){
+                    return false;
+                }else{
+                    marker.remove();
+                    return true;
+                }
+
+            }
+        });
+
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(@NonNull Polyline polyline) {
@@ -207,6 +227,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // todo: Need to append in textbox
                 Toast.makeText(MapsActivity.this, "Total distance between the two point of this line is "+results[0], Toast.LENGTH_LONG).show();
+
+                // calculate midpoint of polyline
+                LatLng centerLatLng = null;
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                for(int i = 0 ; i < polyline.getPoints().size() ; i++)
+                {
+                    builder.include(polyline.getPoints().get(i));
+                }
+                LatLngBounds bounds = builder.build();
+                centerLatLng =  bounds.getCenter();
+
+                setMarkerInCoordinate(centerLatLng, results[0]);
             }
         });
         mMap.setOnPolygonClickListener(new GoogleMap.OnPolygonClickListener() {
@@ -229,6 +261,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         distanceBetweenCAndD);
 
                 double totalDistance = distanceBetweenAAndB[0]+distanceBetweenBAndC[0]+distanceBetweenCAndD[0];
+
+                // calculate midpoint of polyline
+                LatLng centerLatLng = null;
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                for(int i = 0 ; i < polygon.getPoints().size() ; i++)
+                {
+                    builder.include(polygon.getPoints().get(i));
+                }
+                LatLngBounds bounds = builder.build();
+                centerLatLng =  bounds.getCenter();
+
+                setMarkerInCoordinate(centerLatLng, (float) totalDistance);
 
                 // todo: Need to append in textbox
                 Toast.makeText(MapsActivity.this, "Total duration from A to B to C to D is "+ totalDistance, Toast.LENGTH_LONG).show();
@@ -349,12 +393,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         shape = mMap.addPolygon(options);
     }
+    public BitmapDescriptor createPureTextIcon(String text) {
 
+        Paint textPaint = new Paint(); // Adapt to your needs
+        textPaint.setTextSize(50);
+        float textWidth = textPaint.measureText(text);
+        float textHeight = textPaint.getTextSize();
+        int width = (int) (textWidth);
+        int height = (int) (textHeight);
+
+        Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(image);
+
+        canvas.translate(0, height);
+
+        // For development only:
+        // Set a background in order to see the
+        // full size and positioning of the bitmap.
+        // Remove that for a fully transparent icon.
+        //canvas.drawColor(Color.LTGRAY);
+
+        canvas.drawText(text, 0, 0, textPaint);
+        BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(image);
+        return icon;
+    }
     public void setMarker(LatLng latLng) {
 
         if (markers.size() == 0){
             MarkerOptions options = new MarkerOptions().position(latLng)
-                    .title("A");
+                    .title("A")
+                    //.icon(createPureTextIcon("A"))
+                    ;
             options.draggable(true);
 
             // check if there are already the same number of markers, we clear the map.
@@ -380,7 +449,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             MarkerOptions options = new MarkerOptions().position(latLng)
                     .title("D");
             options.draggable(true);
-
             // check if there are already the same number of markers, we clear the map.
             markers.add(mMap.addMarker(options));
             latLngList.add(new com.example.lab1_sabinregmi_c0856358_android.Location(latLng));
@@ -403,6 +471,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             fab.show();
         }
 
+    }
+
+    private void setMarkerInCoordinate(LatLng latLng, Float distance){
+        DecimalFormat df = new DecimalFormat("#.##");
+        MarkerOptions options = new MarkerOptions().position(latLng)
+                .title("")
+                .icon(createPureTextIcon(String.valueOf(df.format(distance))));
+        mMap.addMarker(options);
     }
 
     private void setHomeMarker(Location location) {
