@@ -17,6 +17,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -52,6 +53,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     List<Marker> markers = new ArrayList();
 
     // for drawing polygon
+    Polyline line;
     Polygon shape;
     private static final int POLYGON_SIDES = 4;
 
@@ -113,6 +115,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         else
             startUpdateLocation();
 
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+            @Override
+            public void onPolylineClick(@NonNull Polyline polyline) {
+                List<LatLng> test = polyline.getPoints();
+                float[] results = new float[1];
+                Location.distanceBetween(test.get(0).latitude, test.get(0).longitude,
+                        test.get(1).latitude, test.get(1).longitude,
+                        results);
+
+                Toast.makeText(MapsActivity.this, "Total distance between the two point of this line is "+results[0], Toast.LENGTH_LONG).show();
+            }
+        });
+        mMap.setOnPolygonClickListener(new GoogleMap.OnPolygonClickListener() {
+            @Override
+            public void onPolygonClick(@NonNull Polygon polygon) {
+                List<LatLng> test = polygon.getPoints();
+                float[] distanceBetweenAAndB = new float[1];
+                Location.distanceBetween(test.get(0).latitude, test.get(0).longitude,
+                        test.get(1).latitude, test.get(1).longitude,
+                        distanceBetweenAAndB);
+
+                float[] distanceBetweenBAndC = new float[1];
+                Location.distanceBetween(test.get(1).latitude, test.get(1).longitude,
+                        test.get(2).latitude, test.get(2).longitude,
+                        distanceBetweenBAndC);
+
+                float[] distanceBetweenCAndD = new float[1];
+                Location.distanceBetween(test.get(2).latitude, test.get(2).longitude,
+                        test.get(3).latitude, test.get(3).longitude,
+                        distanceBetweenCAndD);
+
+                double totalDistance = distanceBetweenAAndB[0]+distanceBetweenBAndC[0]+distanceBetweenCAndD[0];
+
+                Toast.makeText(MapsActivity.this, "Total duration from A to B to C to D is "+ totalDistance, Toast.LENGTH_LONG).show();
+            }
+        });
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener(){
             @Override
             public void onMapClick(@NonNull LatLng latLng) {
@@ -160,6 +199,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                    e.printStackTrace();
 //                }
 
+
                 if (markers.size() == 0){
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("A");
@@ -187,14 +227,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }else{
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("P");
-
-                    // check if there are already the same number of markers, we clear the map.
+//
+//                    // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
                 }
 
                 if (markers.size() == POLYGON_SIDES)
+                {
                     drawShape();
+                    drawLine();
+                }
 
+            }
+
+
+
+            private void drawLine() {
+                PolylineOptions options1 = new PolylineOptions()
+                        .color(Color.RED)
+                        .width(10)
+                        .add(markers.get(0).getPosition(), markers.get(1).getPosition());
+                options1.clickable(true);
+                options1.zIndex(2F);
+                mMap.addPolyline(options1);
+
+                PolylineOptions options2 = new PolylineOptions()
+                        .color(Color.RED)
+                        .width(10)
+                        .add(markers.get(1).getPosition(), markers.get(2).getPosition());
+                options2.clickable(true);
+                options2.zIndex(2F);
+                mMap.addPolyline(options2);
+
+                PolylineOptions options3 = new PolylineOptions()
+                        .color(Color.RED)
+                        .width(10)
+                        .add(markers.get(2).getPosition(), markers.get(3).getPosition());
+                options3.clickable(true);
+                options3.zIndex(2F);
+                mMap.addPolyline(options3);
+
+                PolylineOptions options4 = new PolylineOptions()
+                        .color(Color.RED)
+                        .width(10)
+                        .add(markers.get(3).getPosition(), markers.get(0).getPosition());
+                options4.clickable(true);
+                options4.zIndex(2F);
+                mMap.addPolyline(options4);
+
+//                line = mMap.addPolyline(options);
             }
 
             private void drawShape() {
@@ -203,31 +284,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         // 0xFF00FF00 is green and 59 instead of FF is 35% transparency
                         .strokeColor(Color.RED)
                         .strokeWidth(5);
+                options.clickable(true);
 
                 ArrayList<LatLng> sourcePoints = new ArrayList<>();
 
                 for (int i=0; i<POLYGON_SIDES; i++) {
-                    sourcePoints.add(markers.get(i).getPosition());
+                    options.add(markers.get(i).getPosition());
+//                    sourcePoints.add(markers.get(i).getPosition());
 
                 }
-                Projection projection = mMap.getProjection();
-                ArrayList<Point> screenPoints = new ArrayList<>(sourcePoints.size());
-                for (LatLng location : sourcePoints) {
-                    Point p = projection.toScreenLocation(location);
-                    screenPoints.add(p);
-                }
+//                Projection projection = mMap.getProjection();
+//                ArrayList<Point> screenPoints = new ArrayList<>(sourcePoints.size());
+//                for (LatLng location : sourcePoints) {
+//                    Point p = projection.toScreenLocation(location);
+//                    screenPoints.add(p);
+//                }
 
-                ArrayList<Point> convexHullPoints = convexHull(screenPoints);
-                ArrayList<LatLng> convexHullLocationPoints = new ArrayList(convexHullPoints.size());
-                for (Point screenPoint : convexHullPoints) {
-                    LatLng location = projection.fromScreenLocation(screenPoint);
-                    convexHullLocationPoints.add(location);
-                }
-
-                for (LatLng latLng : convexHullLocationPoints) {
-                    options.add(latLng);
-                }
-                shape = mMap.addPolygon(options);
+//                ArrayList<Point> convexHullPoints = convexHull(screenPoints);
+//                ArrayList<LatLng> convexHullLocationPoints = new ArrayList(convexHullPoints.size());
+//                for (Point screenPoint : convexHullPoints) {
+//                    LatLng location = projection.fromScreenLocation(screenPoint);
+//                    convexHullLocationPoints.add(location);
+//                }
+//
+//                for (LatLng latLng : convexHullLocationPoints) {
+//                    options.add(latLng);
+//                }
+                mMap.addPolygon(options);
             }
         });
 
