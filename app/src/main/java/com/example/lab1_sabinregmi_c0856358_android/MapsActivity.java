@@ -63,7 +63,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     List<com.example.lab1_sabinregmi_c0856358_android.Location> latLngList = new ArrayList();
 
     // for drawing polygon
-    Polyline line;
     Polygon shape;
     private static final int POLYGON_SIDES = 4;
 
@@ -72,6 +71,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
 
     private String m_Text = "";
+
+    FloatingActionButton fab;
 
     // instance of shared preferences
     SharedPreferences sharedPreferences;
@@ -96,7 +97,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        FloatingActionButton fab = findViewById(R.id.fab);
+        fab = findViewById(R.id.fab);
+        fab.hide();
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -236,14 +238,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(@NonNull LatLng latLng) {
-                for (Marker marker: markers) {
-                    marker.remove();
-                    markers.remove(marker);
-                }
-
-                shape.remove();
+                markers.removeAll(markers);
                 shape = null;
                 mMap.clear();
+                fab.hide();
             }
         });
 
@@ -255,48 +253,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // todo: Uncomment below line to add location to shared preferences
                 //addLocationToSharedPreferences();
             }
-
-
-
-
-            private void drawLine() {
-                // reason to make multiple options and make multiple polyline is because when we tap
-                PolylineOptions options1 = new PolylineOptions()
-                        .color(Color.RED)
-                        .width(10)
-                        .add(markers.get(0).getPosition(), markers.get(1).getPosition());
-                options1.clickable(true);
-                options1.zIndex(2F);
-                mMap.addPolyline(options1);
-
-                PolylineOptions options2 = new PolylineOptions()
-                        .color(Color.RED)
-                        .width(10)
-                        .add(markers.get(1).getPosition(), markers.get(2).getPosition());
-                options2.clickable(true);
-                options2.zIndex(2F);
-                mMap.addPolyline(options2);
-
-                PolylineOptions options3 = new PolylineOptions()
-                        .color(Color.RED)
-                        .width(10)
-                        .add(markers.get(2).getPosition(), markers.get(3).getPosition());
-                options3.clickable(true);
-                options3.zIndex(2F);
-                mMap.addPolyline(options3);
-
-                PolylineOptions options4 = new PolylineOptions()
-                        .color(Color.RED)
-                        .width(10)
-                        .add(markers.get(3).getPosition(), markers.get(0).getPosition());
-                options4.clickable(true);
-                options4.zIndex(2F);
-                mMap.addPolyline(options4);
-
-//                line = mMap.addPolyline(options);
-            }
-
-
         });
 
     }
@@ -321,6 +277,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, locationListener);
          Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         setHomeMarker(lastKnownLocation);
+    }
+
+    private void drawLine() {
+        // reason to make multiple options and make multiple polyline is because when we tap
+        PolylineOptions options1 = new PolylineOptions()
+                .color(Color.RED)
+                .width(10)
+                .add(markers.get(0).getPosition(), markers.get(1).getPosition());
+        options1.clickable(true);
+        options1.zIndex(2F);
+        mMap.addPolyline(options1);
+
+        PolylineOptions options2 = new PolylineOptions()
+                .color(Color.RED)
+                .width(10)
+                .add(markers.get(1).getPosition(), markers.get(2).getPosition());
+        options2.clickable(true);
+        options2.zIndex(2F);
+        mMap.addPolyline(options2);
+
+        PolylineOptions options3 = new PolylineOptions()
+                .color(Color.RED)
+                .width(10)
+                .add(markers.get(2).getPosition(), markers.get(3).getPosition());
+        options3.clickable(true);
+        options3.zIndex(2F);
+        mMap.addPolyline(options3);
+
+        PolylineOptions options4 = new PolylineOptions()
+                .color(Color.RED)
+                .width(10)
+                .add(markers.get(3).getPosition(), markers.get(0).getPosition());
+        options4.clickable(true);
+        options4.zIndex(2F);
+        mMap.addPolyline(options4);
+
     }
 
     private void drawShape() {
@@ -403,18 +395,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
-//                if (markers.size() == POLYGON_SIDES)
-//                {
-//                    drawShape();
-//                    drawLine();
-//                }
+
         if (markers.size() == POLYGON_SIDES)
         {
-            //mMap.clear();
-//                    shape.remove();
-//                    shape = null;
             drawShape();
-            //drawLine();
+            drawLine();
+            fab.show();
         }
 
     }
