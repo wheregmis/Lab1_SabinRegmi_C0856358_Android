@@ -115,6 +115,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         else
             startUpdateLocation();
 
+        mMap.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+
+            @Override
+            public void onMarkerDragStart(Marker marker) {
+                // TODO Auto-generated method stub
+                // simulating long tap to remove marker
+                markers.remove(marker);
+                marker.remove();
+            }
+
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void onMarkerDrag(Marker marker) {
+                // TODO Auto-generated method stub
+
+            }
+        });
+
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(@NonNull Polyline polyline) {
@@ -205,33 +228,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (markers.size() == 0){
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("A");
+                    options.draggable(true);
 
                     // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
                 }else if (markers.size() == 1){
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("B");
+                    options.draggable(true);
 
                     // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
                 }else if (markers.size() == 2){
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("C");
+                    options.draggable(true);
 
                     // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
                 }else if (markers.size() == 3){
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("D");
+                    options.draggable(true);
 
                     // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
                 }else{
                     MarkerOptions options = new MarkerOptions().position(latLng)
                             .title("P");
+                    options.draggable(true);
 //
 //                    // check if there are already the same number of markers, we clear the map.
                     markers.add(mMap.addMarker(options));
+
                 }
 
                 if (markers.size() == POLYGON_SIDES)
