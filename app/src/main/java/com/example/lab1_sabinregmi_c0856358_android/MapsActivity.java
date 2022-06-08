@@ -124,6 +124,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         test.get(1).latitude, test.get(1).longitude,
                         results);
 
+                // todo: Need to append in textbox
                 Toast.makeText(MapsActivity.this, "Total distance between the two point of this line is "+results[0], Toast.LENGTH_LONG).show();
             }
         });
@@ -148,6 +149,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 double totalDistance = distanceBetweenAAndB[0]+distanceBetweenBAndC[0]+distanceBetweenCAndD[0];
 
+                // todo: Need to append in textbox
                 Toast.makeText(MapsActivity.this, "Total duration from A to B to C to D is "+ totalDistance, Toast.LENGTH_LONG).show();
             }
         });
@@ -243,6 +245,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
             private void drawLine() {
+                // reason to make multiple options and make multiple polyline is because when we tap
                 PolylineOptions options1 = new PolylineOptions()
                         .color(Color.RED)
                         .width(10)
